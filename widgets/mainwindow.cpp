@@ -9,6 +9,18 @@ MainWindow::MainWindow(): QMainWindow(), ui(new Ui::MainWindow), chemClient(this
 	ui->infoFrame->setVisible(false);
 
 	connect(ui->goButton, &QPushButton::clicked, this, &MainWindow::goButtonClicked);
+	ui->nameInput->installEventFilter(this);
+}
+
+bool MainWindow::eventFilter(QObject *object, QEvent *event)
+{
+	if (object != ui->nameInput || event->type() != QEvent::KeyPress) return false;
+
+	QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+	if (keyEvent->key() != Qt::Key_Return) return false;
+
+	MainWindow::goButtonClicked(true);
+	return true;
 }
 
 void MainWindow::goButtonClicked(bool checked) 
@@ -28,13 +40,16 @@ void MainWindow::goButtonClicked(bool checked)
 
 	ui->infoLabel->setText(
 		"<b>IUPAC Name:</b> " + record->iupacName + "<br />" +
-		"<b>Molecular Formula:</b> " + record->molecularFormula
+		"<b>Molecular Formula:</b> " + record->molecularFormula + "<br />"
+		"<b>Molecular Weight:</b> " + record->molecularWeight
 	);
 
 	ui->infoLabel->adjustSize();
 
 	ui->infoImage->setPixmap(record->image);
 	ui->infoImage->adjustSize();
+
+	delete record;
 }
 
 MainWindow::~MainWindow()

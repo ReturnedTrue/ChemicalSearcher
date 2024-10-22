@@ -18,9 +18,10 @@ class MainWindow : public QMainWindow
 		MainWindow();
 		~MainWindow();
 
-		void goButtonClicked(bool checked);
-
 	private:
+		void goButtonClicked(bool checked);
+		bool eventFilter(QObject *object, QEvent *event);
+
 		Ui::MainWindow *ui;
 		PubChemClient chemClient;
 

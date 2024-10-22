@@ -8,6 +8,7 @@ class CompoundRecord
 {
 	public:
 		QString molecularFormula;
+		QString molecularWeight;
 		QString iupacName;
 		QPixmap image;
 
@@ -22,6 +23,7 @@ class PubChemClient
 
 	private:
 		QNetworkReply* sendRequest(QString url);
+		QString formatMolecularFormula(QString input);
 
 		QObject *parent;
 		QNetworkAccessManager manager;
