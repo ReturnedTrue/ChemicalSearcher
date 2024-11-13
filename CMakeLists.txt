@@ -9,10 +9,6 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(DISCORD_SDK "C:/DiscordSDK")
-
-include_directories("${DISCORD_SDK}/include")
-
 find_package(QT NAMES Qt6 REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Network Gui)
 
@@ -20,16 +16,16 @@ file(GLOB WIDGET_SOURCES widgets/*.cpp)
 file(GLOB WIDGET_HEADERS widgets/*.h)
 file(GLOB WIDGET_UIS widgets/*.ui)
 
-file(GLOB LIB_SOURCES lib/**/*.cpp)
-file(GLOB LIB_HEADERS lib/**/*.h)
+file(GLOB INCLUDE_SOURCES include/**/*.cpp)
+file(GLOB INCLUDE_HEADERS include/**/*.h)
 
 set(PROJECT_SOURCES
         main.cpp
         ${WIDGET_SOURCES}
 		${WIDGET_HEADERS}
 		${WIDGET_UIS}
-		${LIB_SOURCES}
-		${LIB_HEADERS}
+		${INCLUDE_SOURCES}
+		${INCLUDE_HEADERS}
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -50,11 +46,11 @@ else()
     endif()
 endif()
 
-target_link_libraries(chemical-searcher PRIVATE Qt6::Widgets)
-target_link_libraries(chemical-searcher PRIVATE Qt6::Network)
-target_link_libraries(chemical-searcher PRIVATE Qt6::Gui)
+target_link_libraries(chemical-searcher PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(chemical-searcher PRIVATE Qt${QT_VERSION_MAJOR}::Network)
+target_link_libraries(chemical-searcher PRIVATE Qt${QT_VERSION_MAJOR}::Gui)
 
-target_link_libraries(chemical-searcher PRIVATE "${DISCORD_SDK}/discord_game_sdk.dll.lib")
+target_link_libraries(chemical-searcher PRIVATE ${PROJECT_SOURCE_DIR}/lib/discord_game_sdk.dll.lib)
 
 if(${QT_VERSION} VERSION_LESS 6.1.0)
   set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.chemical-searcher)

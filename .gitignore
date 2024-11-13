@@ -71,6 +71,9 @@ CMakeLists.txt.user*
 # --------
 *.dll
 *.exe
+*.bundle
+*.lib
+*.dylib
 
 build
 release
