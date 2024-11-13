@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "../lib/pubchemclient.h"
+#include "../lib/pubchem/pubchemclient.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {

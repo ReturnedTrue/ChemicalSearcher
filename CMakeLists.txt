@@ -18,8 +18,8 @@ file(GLOB WIDGET_SOURCES widgets/*.cpp)
 file(GLOB WIDGET_HEADERS widgets/*.h)
 file(GLOB WIDGET_UIS widgets/*.ui)
 
-file(GLOB LIB_SOURCES lib/*.cpp)
-file(GLOB LIB_HEADERS lib/*.h)
+file(GLOB LIB_SOURCES lib/**/*.cpp)
+file(GLOB LIB_HEADERS lib/**/*.h)
 
 set(PROJECT_SOURCES
         main.cpp
