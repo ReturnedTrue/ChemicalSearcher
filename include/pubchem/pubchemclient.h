@@ -6,25 +6,25 @@
 
 struct CompoundRecord
 {
-    CompoundRecord()
-        : loaded(false)
-    {
-    }
+	CompoundRecord()
+		: loaded(false)
+	{
+	}
 
-    bool loaded;
+	bool loaded;
 
-    QString molecularFormula;
-    QString molecularWeight;
-    QString iupacName;
-    QPixmap image;
+	QString molecularFormula;
+	QString molecularWeight;
+	QString iupacName;
+	QPixmap image;
 };
 
 class PubChemClient 
 {
 	public:
-        PubChemClient(QObject *parent);
+		PubChemClient(QObject *parent);
 
-        CompoundRecord getRecordByName(QString name);
+		CompoundRecord getRecordByName(QString name);
 
 	private:
 		QNetworkReply* sendRequest(QString url);

@@ -15,22 +15,22 @@ QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow
 {
-    Q_OBJECT
+	Q_OBJECT
 
-public:
-	MainWindow();
-	~MainWindow();
+	public:
+		MainWindow();
+		~MainWindow();
 
-private:
-	void goButtonClicked(bool checked);
-	bool eventFilter(QObject *object, QEvent *event);
+	private:
+		void goButtonClicked(bool checked);
+		bool eventFilter(QObject *object, QEvent *event);
 
-	Ui::MainWindow *ui;
-    PubChemClient *chemClient;
-	discord::Core *discordCore;
-    discord::Activity discordActivity;
+		Ui::MainWindow *ui;
+		PubChemClient *chemClient;
+		discord::Core *discordCore;
+		discord::Activity discordActivity;
 
-public slots:
-	void updateActivity();
+	public slots:
+		void updateActivity();
 };
 #endif // MAINWINDOW_H
