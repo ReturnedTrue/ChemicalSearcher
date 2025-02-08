@@ -1,39 +1,66 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
 
-#define DISCORD_APPLICATION_ID 1306068247975563355
+#include <chrono>
 
-using std::chrono::system_clock;
+constexpr uint64_t DISCORD_APPLICATION_ID = 1306068247975563355;
 
-MainWindow::MainWindow(): QMainWindow(), ui(new Ui::MainWindow), chemClient(this), discordCore(), discordActivity()
+inline time_t GetTimeNow()
 {
-    ui->setupUi(this);
+    using std::chrono::system_clock;
 
-	auto createResult = discord::Core::Create(DISCORD_APPLICATION_ID, DiscordCreateFlags_Default, &discordCore);
+	return system_clock::to_time_t(system_clock::now());
+}
 
-	discordActivity.SetDetails("Inputting chemical...");
-	discordActivity.SetType(discord::ActivityType::Playing);
+void IgnoreActivityResult(discord::Result result)
+{
+}
 
-	auto& timestamps = discordActivity.GetTimestamps();
-	timestamps.SetStart(system_clock::to_time_t(system_clock::now()));
+MainWindow::MainWindow()
+	: QMainWindow()
+    , ui(new Ui::MainWindow)
+{
+	ui->setupUi(this);
 
-	auto& activityAssets = discordActivity.GetAssets();
-	activityAssets.SetLargeImage("atomic");
+    chemClient = new PubChemClient(this);
 
-	discordCore->ActivityManager().UpdateActivity(discordActivity, [](auto result) {});
+	discord::Result createResult = discord::Core::Create(DISCORD_APPLICATION_ID, DiscordCreateFlags_NoRequireDiscord, &discordCore);
 
-	auto timer = new QTimer(this);
-	connect(timer, &QTimer::timeout, this, &MainWindow::update);
-	timer->start(10);
+	if (createResult == discord::Result::Ok)
+	{
+        discordActivity = discord::Activity();
+        discordActivity.SetDetails("Inputting Chemical...");
+        discordActivity.SetType(discord::ActivityType::Playing);
+
+        discord::ActivityTimestamps &timestamps = discordActivity.GetTimestamps();
+		timestamps.SetStart(GetTimeNow());
+
+        discord::ActivityAssets &activityAssets = discordActivity.GetAssets();
+		activityAssets.SetLargeImage("atomic");
+
+        discordCore->ActivityManager().UpdateActivity(discordActivity, IgnoreActivityResult);
+
+		QTimer *timer = new QTimer(this);
+		connect(timer, &QTimer::timeout, this, &MainWindow::updateActivity);
+		timer->start(10);
+    }
 
 	ui->errorLabel->setText("");
 	ui->infoFrame->setVisible(false);
 
-	ui->nameInput->installEventFilter(this);
+    ui->nameInput->installEventFilter(this);
+
 	connect(ui->goButton, &QPushButton::clicked, this, &MainWindow::goButtonClicked);
 }
 
-void MainWindow::update() {
+MainWindow::~MainWindow()
+{
+    delete ui;
+    delete discordCore;
+}
+
+void MainWindow::updateActivity() 
+{
 	discordCore->RunCallbacks();
 }
 
@@ -53,14 +80,17 @@ void MainWindow::goButtonClicked(bool checked)
 	ui->errorLabel->setText("");
 	ui->infoFrame->setVisible(false);
 
-	auto record = chemClient.getRecordByName(ui->nameInput->toPlainText());
+    CompoundRecord record = chemClient->getRecordByName(ui->nameInput->toPlainText());
 
-	if (record == nullptr)
+    if (!record.loaded)
 	{
 		ui->errorLabel->setText("chemical not found");
 
-		discordActivity.SetDetails("Inputting chemical...");
-		discordCore->ActivityManager().UpdateActivity(discordActivity, [](auto result) {});
+        if (discordCore)
+        {
+            discordActivity.SetDetails("Inputting Chemical...");
+            discordCore->ActivityManager().UpdateActivity(discordActivity, IgnoreActivityResult);
+        }
 
 		return;
 	}
@@ -68,24 +98,19 @@ void MainWindow::goButtonClicked(bool checked)
 	ui->infoFrame->setVisible(true);
 
 	ui->infoLabel->setText(
-		"<b>IUPAC Name:</b> " + record->iupacName + "<br />" +
-		"<b>Molecular Formula:</b> " + record->molecularFormula + "<br />"
-		"<b>Molecular Weight:</b> " + record->molecularWeight
+        "<b>IUPAC Name:</b> " + record.iupacName + "<br />" +
+        "<b>Molecular Formula:</b> " + record.molecularFormula + "<br />"
+        "<b>Molecular Weight:</b> " + record.molecularWeight
 	);
 
 	ui->infoLabel->adjustSize();
 
-	ui->infoImage->setPixmap(record->image);
+    ui->infoImage->setPixmap(record.image);
 	ui->infoImage->adjustSize();
 
-	discordActivity.SetDetails(("Viewing chemical: " + record->iupacName.toStdString()).c_str());
-	discordCore->ActivityManager().UpdateActivity(discordActivity, [](auto result) {});
-
-	delete record;
-}
-
-MainWindow::~MainWindow()
-{
-    delete ui;
-	delete discordCore;
+    if (discordCore)
+    {
+        discordActivity.SetDetails(("Viewing Chemical: " + record.iupacName.toStdString()).c_str());
+        discordCore->ActivityManager().UpdateActivity(discordActivity, IgnoreActivityResult);
+    }
 }

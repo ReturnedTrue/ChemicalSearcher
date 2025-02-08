@@ -72,5 +72,6 @@
 		"xtree": "cpp",
 		"xutility": "cpp",
 		"qtnetwork": "cpp"
-	}
+	},
+	"cmake.generator": "C:/Qt/Tools/Ninja/ninja.exe"
 }

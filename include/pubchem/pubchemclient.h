@@ -4,30 +4,35 @@
 #include <QtNetwork>
 #include <QtGui>
 
-class CompoundRecord 
+struct CompoundRecord
 {
-	public:
-		QString molecularFormula;
-		QString molecularWeight;
-		QString iupacName;
-		QPixmap image;
+    CompoundRecord()
+        : loaded(false)
+    {
+    }
 
+    bool loaded;
+
+    QString molecularFormula;
+    QString molecularWeight;
+    QString iupacName;
+    QPixmap image;
 };
 
 class PubChemClient 
 {
 	public:
-		PubChemClient(QObject *parent);
+        PubChemClient(QObject *parent);
 
-		CompoundRecord* getRecordByName(QString name);
+        CompoundRecord getRecordByName(QString name);
 
 	private:
 		QNetworkReply* sendRequest(QString url);
 		QString formatMolecularFormula(QString input);
 
 		QObject *parent;
-		QNetworkAccessManager manager;
-		QEventLoop loop;
+		QNetworkAccessManager *manager;
+		QEventLoop *loop;
 };
 
 #endif

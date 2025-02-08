@@ -2,17 +2,25 @@
 
 #include "pubchemclient.h"
 
-const int SUBSCRIPT_BASE = 0x2080;
+constexpr uint16_t PUBCHEM_SUBSCRIPT_BASE = 0x2080;
 
-PubChemClient::PubChemClient(QObject *parent): manager(), loop(), parent(parent) {}
+constexpr QLatin1String PUBCHEM_RECORD_URL("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/%1/property/MolecularFormula,MolecularWeight,IUPACName/JSON");
+constexpr QLatin1String PUBCHEM_IMAGE_URL("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/%1/PNG?image_size=256x256");
+
+PubChemClient::PubChemClient(QObject *parent)
+    : parent(parent)
+{
+    manager = new QNetworkAccessManager(parent);
+    loop = new QEventLoop(parent);
+}
 
 QNetworkReply* PubChemClient::sendRequest(QString url)
 {
-	auto request = QNetworkRequest(QUrl(url));
-	auto reply = manager.get(request);
+    QNetworkRequest request = QNetworkRequest(QUrl(url));
+    QNetworkReply *reply = manager->get(request);
 
-	parent->connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-	loop.exec();
+    parent->connect(reply, &QNetworkReply::finished, loop, &QEventLoop::quit);
+    loop->exec();
 
 	if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute) != 200)
 	{
@@ -24,20 +32,19 @@ QNetworkReply* PubChemClient::sendRequest(QString url)
 
 QString PubChemClient::formatMolecularFormula(QString input)
 {
-	auto formatted = QString();
+    QString formatted;
 
 	for (auto i = input.begin(), end = input.end(); i != end; ++i)
 	{
-		auto current = *i;
+        QChar current = *i;
 		
 		if (current.isDigit())
 		{
-			auto subscript = SUBSCRIPT_BASE + current.unicode() - 48;
+            int subscript = PUBCHEM_SUBSCRIPT_BASE + current.unicode() - 48;
 			formatted.append(QChar::fromUcs2(subscript));
 
 			continue;
 		}
-
 
 		formatted.append(current);
 	}
@@ -45,29 +52,28 @@ QString PubChemClient::formatMolecularFormula(QString input)
 	return formatted;
 }
 
-CompoundRecord* PubChemClient::getRecordByName(QString name)
+CompoundRecord PubChemClient::getRecordByName(QString name)
 {
-	auto recordReply = sendRequest("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/" + name + "/property/MolecularFormula,MolecularWeight,IUPACName/JSON");
-	if (recordReply == nullptr) return nullptr;
+    CompoundRecord record;
 
-	auto document = QJsonDocument::fromJson(recordReply->readAll());
-	auto properties = document["PropertyTable"]["Properties"][0];
+    QPointer<QNetworkReply> recordReply(sendRequest(PUBCHEM_RECORD_URL.arg(name)));
+    if (recordReply == nullptr) return record;
 
-	auto record = new CompoundRecord();
-	record->molecularFormula = formatMolecularFormula(properties["MolecularFormula"].toString());
-	record->molecularWeight = properties["MolecularWeight"].toString();
-	record->iupacName = properties["IUPACName"].toString();
+    QJsonDocument document = QJsonDocument::fromJson(recordReply->readAll());
+    QJsonValue properties = document["PropertyTable"]["Properties"][0];
 
-	auto imageReply = sendRequest("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/" + name + "/PNG?image_size=256x256");
-	if (imageReply == nullptr) return nullptr;
+    record.molecularFormula = formatMolecularFormula(properties["MolecularFormula"].toString());
+    record.molecularWeight = properties["MolecularWeight"].toString();
+    record.iupacName = properties["IUPACName"].toString();
 
-	auto pixmap = QPixmap();
+    QPointer<QNetworkReply> imageReply(sendRequest(PUBCHEM_IMAGE_URL.arg(name)));
+    if (imageReply == nullptr) return record;
+
+    QPixmap pixmap;
 	pixmap.loadFromData(imageReply->readAll());
 
-	record->image = pixmap;
+    record.image = pixmap;
+    record.loaded = true;
 
-	delete recordReply;
-	delete imageReply;
-	
 	return record;
 }

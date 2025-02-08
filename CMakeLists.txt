@@ -50,7 +50,7 @@ target_link_libraries(chemical-searcher PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 target_link_libraries(chemical-searcher PRIVATE Qt${QT_VERSION_MAJOR}::Network)
 target_link_libraries(chemical-searcher PRIVATE Qt${QT_VERSION_MAJOR}::Gui)
 
-target_link_libraries(chemical-searcher PRIVATE ${PROJECT_SOURCE_DIR}/lib/discord_game_sdk.dll.lib)
+target_link_libraries(chemical-searcher PRIVATE ${PROJECT_SOURCE_DIR}/lib/discord/discord_game_sdk.dll.lib)
 
 if(${QT_VERSION} VERSION_LESS 6.1.0)
   set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.chemical-searcher)
