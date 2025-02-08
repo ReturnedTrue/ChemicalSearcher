@@ -18,7 +18,7 @@ void IgnoreActivityResult(discord::Result result)
 
 MainWindow::MainWindow()
 	: QMainWindow()
-    , ui(new Ui::MainWindow)
+	, ui(new Ui::MainWindow)
 {
 	ui->setupUi(this);
 
